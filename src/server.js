@@ -8,7 +8,7 @@ import { Note } from "./models/note.js";
 import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import notesRoutes from './routes/notesRoutes.js';
+import notesRoutes from './routes/notesroutes.js';
 
 
 const app = express();
