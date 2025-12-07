@@ -13,96 +13,41 @@ const objectIdValidator = (value, helpers) => {
 // ---- Create Note Schema ----
 export const createNoteSchema = {
   [Segments.BODY]: Joi.object({
-    title: Joi.string()
-      .min(3)
-      .max(30)
-      .required()
-      .messages({
-        "string.base": "Title must be a string",
-        "string.min": "Title should have at least {#limit} characters",
-        "string.max": "Title should have at most {#limit} characters",
-        "any.required": "Title is required",
-      }),
+    title: Joi.string().min(1).max(30).required(),
 
-    content: Joi.string()
-      .min(10)
-      .max(500)
-      .required()
-      .messages({
-        "string.base": "Content must be a string",
-        "string.min": "Content should have at least {#limit} characters",
-        "string.max": "Content should have at most {#limit} characters",
-        "any.required": "Content is required",
-      }),
+    content: Joi.string().allow("").optional(),
 
-    tag: Joi.string()
-      .valid(...TAGS)
-      .default("Todo")
-      .required()
-      .messages({
-        "any.only": "Tag must be one of the allowed values",
-        "any.required": "Tag is required",
-      }),
+    tag: Joi.string().valid(...TAGS).optional(),
   }),
 };
 
 // ---- Note ID param ----
-export const noteIdParamSchema = {
+export const noteIdSchema = {
   [Segments.PARAMS]: Joi.object({
     noteId: Joi.string().custom(objectIdValidator).required(),
   }),
 };
 
-// ---- Update Note ----
+// ---- Update Note Schema ----
 export const updateNoteSchema = {
   [Segments.PARAMS]: Joi.object({
     noteId: Joi.string().custom(objectIdValidator).required(),
   }),
 
   [Segments.BODY]: Joi.object({
-    title: Joi.string()
-      .min(3)
-      .max(30)
-      .required()
-      .messages({
-        "string.base": "Title must be a string",
-        "string.min": "Title should have at least {#limit} characters",
-        "string.max": "Title should have at most {#limit} characters",
-        "any.required": "Title is required",
-      }),
-
-    content: Joi.string()
-      .min(10)
-      .max(500)
-      .required()
-      .messages({
-        "string.base": "Content must be a string",
-        "string.min": "Content should have at least {#limit} characters",
-        "string.max": "Content should have at most {#limit} characters",
-        "any.required": "Content is required",
-      }),
-
-    tag: Joi.string()
-      .valid(...TAGS)
-      .default("Todo")
-      .required()
-      .messages({
-        "any.only": "Tag must be one of the allowed values",
-        "any.required": "Tag is required",
-      }),
-
-    onDuty: Joi.boolean()
-      .default(false)
-      .messages({
-        "boolean.base": "onDuty must be a boolean value",
-      }),
-  }),
+    title: Joi.string().min(1).max(30),
+    content: Joi.string().allow(""),
+    tag: Joi.string().valid(...TAGS),
+  })
+    .min(1) // <-- Важливо: має бути хоча б одне поле
 };
 
-// ---- Get Notes (pagination) ----
-export const getNotesSchema = {
+// ---- Get All Notes Schema ----
+export const getAllNotesSchema = {
   [Segments.QUERY]: Joi.object({
     page: Joi.number().integer().min(1).default(1),
-    perPage: Joi.number().integer().min(5).max(20).default(15),
+    perPage: Joi.number().integer().min(5).max(20).default(10),
+    tag: Joi.string().valid(...TAGS).optional(),
+    search: Joi.string().allow("").optional(),
   }),
 };

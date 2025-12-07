@@ -1,44 +1,40 @@
-import createHttpError from 'http-errors';
-import { Note } from '../models/note.js';
+import createHttpError from "http-errors";
+import { Note } from "../models/note.js";
 
-// GET /notes ?page=&perPage=&tag=&search=
+// GET /notes?tag=&search=&page=&perPage=
 export const getAllNotes = async (req, res, next) => {
   try {
-    let { page = 1, perPage = 10, tag, search = "" } = req.query;
+    let { page = 1, perPage = 10, tag, search } = req.query;
 
     page = Number(page);
     perPage = Number(perPage);
-
     const skip = (page - 1) * perPage;
 
-    // --- Фільтрація ---
     const filter = {};
 
-    // якщо tag присутній — додаємо його у фільтр
+    // фільтр по tag
     if (tag) {
       filter.tag = tag;
     }
 
-    // якщо search не порожній — робимо пошук по title + content
-    if (search.trim() !== "") {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } }
-      ];
+    // текстовий пошук
+    if (search) {
+      filter.$text = { $search: search };
     }
 
-    // --- Паралельні запити ---
-    const [totalItems, notes] = await Promise.all([
+    const [totalNotes, notes] = await Promise.all([
       Note.countDocuments(filter),
-      Note.find(filter).skip(skip).limit(perPage)
+      Note.find(filter)
+        .skip(skip)
+        .limit(perPage)
     ]);
 
-    const totalPages = Math.ceil(totalItems / perPage);
+    const totalPages = Math.ceil(totalNotes / perPage);
 
     res.status(200).json({
       page,
       perPage,
-      totalItems,
+      totalNotes,
       totalPages,
       notes,
     });
@@ -77,6 +73,7 @@ export const createNote = async (req, res, next) => {
 export const deleteNote = async (req, res, next) => {
   try {
     const { noteId } = req.params;
+
     const note = await Note.findByIdAndDelete(noteId);
 
     if (!note) {
@@ -94,11 +91,9 @@ export const updateNote = async (req, res, next) => {
   try {
     const { noteId } = req.params;
 
-    const note = await Note.findByIdAndUpdate(
-      noteId,
-      req.body,
-      { new: true }
-    );
+    const note = await Note.findByIdAndUpdate(noteId, req.body, {
+      new: true,
+    });
 
     if (!note) {
       return next(createHttpError(404, "Note not found"));
