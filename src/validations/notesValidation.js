@@ -1,6 +1,6 @@
 import { Joi, Segments } from "celebrate";
 import { isValidObjectId } from "mongoose";
-import { TAGS } from "../contants/tags.js";
+import { TAGS } from "../constants/tags.js";
 
 // ---- Custom ID validator ----
 const objectIdValidator = (value, helpers) => {
@@ -36,7 +36,7 @@ export const createNoteSchema = {
       }),
 
     tag: Joi.string()
-      .valid(...TAGS)   
+      .valid(...TAGS)
       .default("Todo")
       .required()
       .messages({
