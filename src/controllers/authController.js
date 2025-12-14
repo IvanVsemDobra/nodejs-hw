@@ -4,7 +4,7 @@ import { User } from "../models/user.js";
 import { Session } from "../models/session.js";
 import { createSession, setSessionCookies } from "../services/auth.js";
 
-//  REGISTER
+// REGISTER
 export const registerUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -21,18 +21,19 @@ export const registerUser = async (req, res, next) => {
       password: hashedPassword,
     });
 
-    // створюємо сесію
-    const newSession = await createSession(newUser._id);
-    setSessionCookies(res, newSession);
+    const session = await createSession(newUser._id);
+    setSessionCookies(res, session);
 
-    res.status(201).json(newUser);
+    res.status(201).json({
+      _id: newUser._id,
+      email: newUser.email,
+    });
   } catch (error) {
     next(error);
   }
 };
 
 // LOGIN
-
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -47,21 +48,21 @@ export const loginUser = async (req, res, next) => {
       return next(createHttpError(401, "Invalid credentials"));
     }
 
-    // видаляємо стару сесію
     await Session.deleteOne({ userId: user._id });
 
-    // створюємо нову
-    const newSession = await createSession(user._id);
-    setSessionCookies(res, newSession);
+    const session = await createSession(user._id);
+    setSessionCookies(res, session);
 
-    res.status(200).json(user);
+    res.status(200).json({
+      _id: user._id,
+      email: user.email,
+    });
   } catch (error) {
     next(error);
   }
 };
 
 // LOGOUT
-
 export const logoutUser = async (req, res, next) => {
   try {
     const { sessionId } = req.cookies;
@@ -80,8 +81,7 @@ export const logoutUser = async (req, res, next) => {
   }
 };
 
-// REFRESH SESSION
-
+// REFRESH
 export const refreshUserSession = async (req, res, next) => {
   try {
     const session = await Session.findOne({
@@ -93,17 +93,11 @@ export const refreshUserSession = async (req, res, next) => {
       return next(createHttpError(401, "Session not found"));
     }
 
-    const isExpired =
-      new Date() > new Date(session.refreshTokenValidUntil);
-
-    if (isExpired) {
+    if (new Date() > new Date(session.refreshTokenValidUntil)) {
       return next(createHttpError(401, "Session token expired"));
     }
 
-    await Session.deleteOne({
-      _id: session._id,
-      refreshToken: session.refreshToken,
-    });
+    await Session.deleteOne({ _id: session._id });
 
     const newSession = await createSession(session.userId);
     setSessionCookies(res, newSession);
