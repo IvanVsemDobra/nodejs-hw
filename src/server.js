@@ -39,9 +39,22 @@ app.use(authRoutes);
 
 app.use(notesRouter);
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'API is working ',
+    endpoints: {
+      register: 'POST /auth/register',
+      login: 'POST /auth/login',
+      logout: 'POST /auth/logout',
+      refresh: 'POST /auth/refresh',
+      notes: 'GET /notes',
+    },
+  });
+});
+
 // ===== Errors =====
-app.use(notFoundHandler);
 app.use(errors());
+app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ===== DB + Server =====
